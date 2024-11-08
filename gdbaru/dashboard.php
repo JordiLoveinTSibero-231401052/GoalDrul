@@ -2,18 +2,19 @@
 
 include "service/apikey.php";
 $fixtures_url = 'https://v3.football.api-sports.io/fixtures';
-$league_ids = [39, 140, 61, 135, 78]; // Premier League, La Liga, Bundesliga, Serie A, Ligue 1
+$league_ids = [39, 140, 61, 135, 78, 2, 3];
 
 include "service/database.php";
 
 $ch = curl_init();
 
-$today = date('Y-m-d'); // Get today's date in 'YYYY-MM-DD' format
+$today = date('Y-m-d');
 
 function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
     $params = [
         'league' => $league_id,
-        'next' => 30
+        'next' => 30,
+        'season' => date('Y'), // Specify season for consistent results
     ];
 
     curl_setopt($ch, CURLOPT_URL, $fixtures_url . '?' . http_build_query($params));
@@ -31,42 +32,58 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
         $output = '';
 
         if (!empty($data['response'])) {
-            $matches_found = false; // Flag to track if matches are found
+            $matches_found = false;
 
             foreach ($data['response'] as $match) {
                 $match_date = $match['fixture']['date'];
                 $formatted_date = date('d M Y, H:i', strtotime($match_date));
                 $match_day = date('Y-m-d', strtotime($match_date));
 
-                // Only display matches for today
-                if ($match_day === $today) {
-                    $home_team = $match['teams']['home']['name'];
-                    $away_team = $match['teams']['away']['name'];
-                    $home_score = $match['goals']['home'] ?? '-';
-                    $away_score = $match['goals']['away'] ?? '-';
-                    $match_status = $match['fixture']['status']['long'];
-                    $home_team_id = $match['teams']['home']['id'];
-                    $away_team_id = $match['teams']['away']['id'];
+                $home_team = $match['teams']['home']['name'];
+                $away_team = $match['teams']['away']['name'];
+                $home_score = $match['goals']['home'] ?? '-';
+                $away_score = $match['goals']['away'] ?? '-';
+                $match_status = $match['fixture']['status']['long'];
+                $home_team_id = $match['teams']['home']['id'];
+                $away_team_id = $match['teams']['away']['id'];
+                $home_logo = $match['teams']['home']['logo'];
+                $away_logo = $match['teams']['away']['logo'];
 
-                    // Display each match as a card
-                   // Inside the fetch_fixtures function, modify the card output like this:
-                $output .= "<div class='col-md-4 mt-2 d-flex'>
-                <div class='card shadow-sm flex-grow-1'>
-                    <div class='card-body'>
-                        <h5 class='card-title'><a href='team_info.php?team_id=$home_team_id'>$home_team</a> vs <a href='team_info.php?team_id=$away_team_id'>$away_team</a></h5>
-                        <p class='match-date'>Date: $formatted_date</p>
-                        <p>Status: $match_status</p>
-                        <p>Score: $home_score - $away_score</p>
-                        <a href='#' class='btn btn-primary'>View Details</a>
-                    </div>
-                </div>
-                </div>";
+                // Show upcoming matches
+                if ($match_day > $today) {
+                    $output .= "<div class='row mb-3 match-info align-items-center'>"; // Centered match info
+
+                    // Home team logo and name
+                    $output .= "    <div class='col-md-5 d-flex justify-content-end align-items-center'>";
+                    $output .= "        <img src='$home_logo' alt='$home_team Logo' class='img-fluid' style='width: 30px; height: 30px; margin-right: 10px;'>";
+                    $output .= "        <a href='team_info.php?team_id=$home_team_id'>$home_team</a>";
+                    $output .= "    </div>";
+
+                    // Score in the center, separated by a dash
+                    $output .= "    <div class='col-md-2 text-center'>";
+                    $output .= "        <h3>$home_score - $away_score</h3>"; // Score displayed in the center
+                    $output .= "    </div>";
+
+                    // Away team logo and name
+                    $output .= "    <div class='col-md-5 d-flex justify-content-start align-items-center'>";
+                    $output .= "        <a href='team_info.php?team_id=$away_team_id'>$away_team</a>";
+                    $output .= "        <img src='$away_logo' alt='$away_team Logo' class='img-fluid' style='width: 30px; height: 30px; margin-left: 10px;'>";
+                    $output .= "    </div>";
+                    $output .= "    <p>$formatted_date</p>"; // Date below status
+
+                    $output .= "</div>";
+
+                    // Match details (status, date)
+                    $output .= "<div class='match-details text-center'>";
+                    $output .= "    <p>Status: $match_status</p>"; // Status below score
+                    $output .= "</div>";
 
                     $matches_found = true;
                 }
             }
+
             if (!$matches_found) {
-                $output .= '<div class="col-12"><p>No matches scheduled for today.</p></div>';
+                $output .= '<div class="col-12"><p>No upcoming matches scheduled.</p></div>';
             }
         } else {
             $output .= '<div class="col-12"><p>No upcoming match data available.</p></div>';
@@ -75,7 +92,6 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
         return $output;
     }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -88,7 +104,7 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="newcss/style.css">
 </head>
 
 <body>
@@ -126,20 +142,26 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
     <nav class="navbar bg-body-tertiary">
     <div class="bottom_nav">
         <ul>
-          <a href="Lpremierleague.php">
+          <a href="matches.php?league_id=39">
               <img src="assets/premierleague.png" alt="Premier League" class="img">
           </a>
-          <a href="Llaliga.php">
+          <a href="matches.php?league_id=140">
               <img src="assets/laliga24.png" alt="La Liga" class="img">
           </a>
-          <a href="Lligue1.php">
+          <a href="matches.php?league_id=78">
               <img src="assets/ligue1.png" alt="Ligue 1" class="img">
           </a>
-          <a href="Lbundesliga.php">
+          <a href="matches.php?league_id=61">
               <img src="assets/bundesliga.png" alt="Bundesliga" class="img">
           </a>
-          <a href="LserieA.php">
+          <a href="matches.php?league_id=135">
               <img src="assets/serie_a.png" alt="Serie A" class="img">
+            </a>
+          <a href="matches.php?league_id=2">
+              <img src="assets/ucl.png" alt="Serie A" class="img">
+            </a>
+          <a href="matches.php?league_id=3">
+              <img src="assets/uel.png" alt="Serie A" class="img">
             </a>
         </ul>
     </div>
@@ -147,8 +169,8 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
 
 
 
-<div class="container mt-5">
-    
+
+<div class="container mt-5">   
     <h1 class="text-center mt-5 mb-5">Today's Matches</h1>
         <div id="matchCarousel" class="carousel slide mt-3" data-bs-ride="carousel">
             <div class="carousel-inner">
@@ -207,20 +229,26 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
                         case 39:
                             echo 'Premier League';
                             break;
-                            case 140:
-                                echo 'La Liga';
-                                break;
-                                case 61:
-                                    echo 'Bundesliga';
-                                    break;
-                                    case 135:
-                                        echo 'Serie A';
-                                        break;
-                                        case 78:
-                                            echo 'Ligue 1';
-                                            break;
-                                            }
-                                            ?>
+                        case 140:
+                            echo 'La Liga';
+                            break;
+                        case 61:
+                            echo 'Bundesliga';
+                            break;
+                        case 135:
+                            echo 'Serie A';
+                            break;
+                        case 78:
+                            echo 'Ligue 1';
+                            break;
+                        case 2:
+                            echo 'UCL';
+                            break;
+                        case 3:
+                            echo 'UEL';
+                            break;
+                        } 
+                    ?>
                 </h2>
             </section>
             <div class="d-flex text-center">
