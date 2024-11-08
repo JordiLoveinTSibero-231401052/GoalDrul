@@ -1,84 +1,62 @@
 <?php
-
-session_start(); 
-
+session_start(); // Memulai sesi
+include 'service/database.php'; // Menghubungkan ke database
 
 if (isset($_POST['logout'])) {
+    // Destroy the session and redirect to the login page
     session_destroy();
-    header("Location: dashboard.php");
+    header("Location: dashboard.php"); // Change this to the appropriate login page
     exit();
 }
 
-$api_key = '5f2ee06bed1059eb1765f2100ca31106';
-$fixtures_url = 'https://v3.football.api-sports.io/fixtures';
-$league_ids = [39, 140, 61, 135, 78]; 
-include "service/database.php";
+// Cek apakah form telah di-submit
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $password_lama = $_POST['password_lama']; // Mengambil input password lama
+    $password_baru = $_POST['password_baru']; // Mengambil input password baru
+    $konfirmasi_password = $_POST['konfirmasi_password']; // Mengambil input konfirmasi password
 
-$ch = curl_init();
+    $username = $_SESSION['username']; // Mengambil username dari sesi
 
-$today = date('Y-m-d'); 
-
-function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
-    $params = [
-        'league' => $league_id,
-        'next' => 30
-    ];
-
-    curl_setopt($ch, CURLOPT_URL, $fixtures_url . '?' . http_build_query($params));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'x-apisports-key: ' . $api_key
-    ]);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-    $response = curl_exec($ch);
-
-    if ($response === false) {
-        return '<div class="col-12"><p>Error: ' . curl_error($ch) . '</p></div>';
+    // Validasi input
+    if (empty($password_lama) || empty($password_baru) || empty($konfirmasi_password)) {
+        echo "<script>alert('Semua kolom harus diisi!');</script>";
+    } elseif ($password_baru !== $konfirmasi_password) {
+        echo "<script>alert('Password baru dan konfirmasi password tidak cocok!');</script>";
     } else {
-        $data = json_decode($response, true);
-        $output = '';
+        // Query untuk mendapatkan password lama dari database
+        $sql = "SELECT password FROM users WHERE username = ?";
+        $stmt = $mysqli->prepare($sql); // Menggunakan koneksi $mysqli
+        $stmt->bind_param("s", $username); // Mengganti placeholder (?) dengan username dari sesi
+        $stmt->execute(); // Menjalankan query
+        $result = $stmt->get_result(); // Mendapatkan hasil dari query
 
-        if (!empty($data['response'])) {
-            $matches_found = false;
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
 
-            foreach ($data['response'] as $match) {
-                $match_date = $match['fixture']['date'];
-                $formatted_date = date('d M Y, H:i', strtotime($match_date));
-                $match_day = date('Y-m-d', strtotime($match_date));
+            // Verifikasi apakah password lama sesuai dengan yang di-hash (menggunakan hash yang sama seperti di registrasi)
+            if (hash("sha256", $password_lama) == $row['password']) {
+                // Enkripsi password baru menggunakan hash yang sama
+                $hashed_password_baru = hash("sha256", $password_baru);
 
-                if ($match_day === $today) {
-                    $home_team = $match['teams']['home']['name'];
-                    $away_team = $match['teams']['away']['name'];
-                    $home_score = $match['goals']['home'] ?? '-';
-                    $away_score = $match['goals']['away'] ?? '-';
-                    $match_status = $match['fixture']['status']['long'];
-                    $home_team_id = $match['teams']['home']['id'];
-                    $away_team_id = $match['teams']['away']['id'];
-
-                $output .= "<div class='col-md-4 mt-2 d-flex'>
-                <div class='card shadow-sm flex-grow-1'>
-                    <div class='card-body'>
-                        <h5 class='card-title'><a href='team_info.php?team_id=$home_team_id'>$home_team</a> vs <a href='team_info.php?team_id=$away_team_id'>$away_team</a></h5>
-                        <p class='match-date'>Date: $formatted_date</p>
-                        <p>Status: $match_status</p>
-                        <p>Score: $home_score - $away_score</p>
-                        <a href='#' class='btn btn-primary'>View Details</a>
-                    </div>
-                </div>
-                </div>";
-
-                    $matches_found = true;
+                // Update password baru ke database
+                $sql_update = "UPDATE users SET password = ? WHERE username = ?";
+                $stmt_update = $mysqli->prepare($sql_update); // Menggunakan koneksi $mysqli
+                $stmt_update->bind_param("ss", $hashed_password_baru, $username); // Mengganti placeholder dengan password baru yang telah di-hash dan username
+                if ($stmt_update->execute()) {
+                    echo "<script>alert('Password berhasil diubah!');</script>";
+                } else {
+                    echo "<script>alert('Gagal mengubah password. Silakan coba lagi.');</script>";
                 }
-            }
-
-            if (!$matches_found) {
-                $output .= '<div class="col-12"><p>No matches scheduled for today.</p></div>';
+            } else {
+                echo "<script>alert('Password lama salah.');</script>";
             }
         } else {
-            $output .= '<div class="col-12"><p>No upcoming match data available.</p></div>';
+            echo "<script>alert('Pengguna tidak ditemukan.');</script>";
         }
 
-        return $output;
+        // Menutup statement dan koneksi
+        $stmt->close();
+        $mysqli->close();
     }
 }
 
@@ -136,7 +114,7 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
             </div>
         </div>
     </nav>
-
+<form action="" method="POST">
     <div class="container light-style flex-grow-1 container-p-y">
         <h4 class="font-weight-bold py-3 mb-4">
             Account settings
@@ -190,15 +168,15 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
                             <div class="card-body pb-2">
                                 <div class="form-group">
                                     <label class="form-label">Current password</label>
-                                    <input type="password" class="form-control">
+                                    <input type="password" class="form-control" id="password_lama" name="password_lama" required>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">New password</label>
-                                    <input type="password" class="form-control">
+                                    <input type="password" class="form-control" id="password_baru" name="password_baru" required>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Repeat new password</label>
-                                    <input type="password" class="form-control">
+                                    <input type="password" class="form-control" id="konfirmasi_password" name="konfirmasi_password" required>
                                 </div>
                             </div>
                         </div>
@@ -363,22 +341,21 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
             </div>
         </div>
         <div class="text-right mt-3">
-            <button type="button" class="btn btn-primary">Save changes</button>&nbsp;
+            <input type="submit" value="Ganti Password">
             <button type="button" class="btn btn-default">Cancel</button>
         </div>
     </div>
-    
+    </form> 
     <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
     <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript"></script>
 
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-<?php
-curl_close($ch);
-?>
+
 
 </body>
 </html>
