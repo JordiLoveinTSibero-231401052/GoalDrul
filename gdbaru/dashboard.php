@@ -2,7 +2,7 @@
 
 include "service/apikey.php";
 $fixtures_url = 'https://v3.football.api-sports.io/fixtures';
-$league_ids = [39, 140, 61, 135, 78, 2, 3];
+$league_ids = [39, 140, 61, 135, 78, 2, 3, 274, 30];
 
 include "service/database.php";
 
@@ -14,7 +14,7 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
     $params = [
         'league' => $league_id,
         'next' => 30,
-        'season' => date('Y'), // Specify season for consistent results
+        'season' => date('Y'),
     ];
 
     curl_setopt($ch, CURLOPT_URL, $fixtures_url . '?' . http_build_query($params));
@@ -49,33 +49,28 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
                 $home_logo = $match['teams']['home']['logo'];
                 $away_logo = $match['teams']['away']['logo'];
 
-                // Show upcoming matches
                 if ($match_day > $today) {
-                    $output .= "<div class='row mb-3 match-info align-items-center'>"; // Centered match info
+                    $output .= "<div class='row mb-3 match-info align-items-center'>";
 
-                    // Home team logo and name
                     $output .= "    <div class='col-md-5 d-flex justify-content-end align-items-center'>";
                     $output .= "        <img src='$home_logo' alt='$home_team Logo' class='img-fluid' style='width: 30px; height: 30px; margin-right: 10px;'>";
                     $output .= "        <a href='team_info.php?team_id=$home_team_id'>$home_team</a>";
                     $output .= "    </div>";
 
-                    // Score in the center, separated by a dash
                     $output .= "    <div class='col-md-2 text-center'>";
-                    $output .= "        <h3>$home_score - $away_score</h3>"; // Score displayed in the center
+                    $output .= "        <h3>$home_score - $away_score</h3>";
                     $output .= "    </div>";
 
-                    // Away team logo and name
                     $output .= "    <div class='col-md-5 d-flex justify-content-start align-items-center'>";
                     $output .= "        <a href='team_info.php?team_id=$away_team_id'>$away_team</a>";
                     $output .= "        <img src='$away_logo' alt='$away_team Logo' class='img-fluid' style='width: 30px; height: 30px; margin-left: 10px;'>";
                     $output .= "    </div>";
-                    $output .= "    <p>$formatted_date</p>"; // Date below status
+                    $output .= "    <p>$formatted_date</p>";
 
                     $output .= "</div>";
 
-                    // Match details (status, date)
                     $output .= "<div class='match-details text-center'>";
-                    $output .= "    <p>Status: $match_status</p>"; // Status below score
+                    $output .= "    <p>Status: $match_status</p>";
                     $output .= "</div>";
 
                     $matches_found = true;
@@ -163,6 +158,12 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
           <a href="matches.php?league_id=3">
               <img src="assets/uel.png" alt="Serie A" class="img">
             </a>
+          <a href="matches.php?league_id=274">
+              <img src="assets/briliga1.png" alt="Serie A" class="img">
+            </a>
+          <a href="matches.php?league_id=30">
+              <img src="assets/afcwc.png" alt="Serie A" class="img">
+            </a>
         </ul>
     </div>
 </nav>
@@ -246,6 +247,12 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
                             break;
                         case 3:
                             echo 'UEL';
+                            break;
+                        case 274:
+                            echo 'Liga 1 Indonesia';
+                            break;
+                        case 30:
+                            echo 'AFC WC Qualifier';
                             break;
                         } 
                     ?>
