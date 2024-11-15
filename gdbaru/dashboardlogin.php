@@ -1,24 +1,21 @@
 <?php
 
-session_start(); // Start the session to access session variables
+session_start();
 
-// Check if the logout request has been made
 if (isset($_POST['logout'])) {
-    // Destroy the session and redirect to the login page
     session_destroy();
-    header("Location: dashboard.php"); // Change this to the appropriate login page
+    header("Location: dashboard.php"); 
     exit();
 }
 include "service/apikey.php";
 
 $fixtures_url = 'https://v3.football.api-sports.io/fixtures';
-$league_ids = [39, 140, 61, 135, 78]; // Premier League, La Liga, Bundesliga, Serie A, Ligue 1
-
+$league_ids = [39, 140, 61, 135, 78, 2, 3, 274, 30];
 include "service/database.php";
 
 $ch = curl_init();
 
-$today = date('Y-m-d'); // Get today's date in 'YYYY-MM-DD' format
+$today = date('Y-m-d');
 
 function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
     $params = [
@@ -41,14 +38,13 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
         $output = '';
 
         if (!empty($data['response'])) {
-            $matches_found = false; // Flag to track if matches are found
+            $matches_found = false;
 
             foreach ($data['response'] as $match) {
                 $match_date = $match['fixture']['date'];
                 $formatted_date = date('d M Y, H:i', strtotime($match_date));
                 $match_day = date('Y-m-d', strtotime($match_date));
 
-                // Only display matches for today
                 if ($match_day === $today) {
                     $home_team = $match['teams']['home']['name'];
                     $away_team = $match['teams']['away']['name'];
@@ -58,8 +54,6 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
                     $home_team_id = $match['teams']['home']['id'];
                     $away_team_id = $match['teams']['away']['id'];
 
-                    // Display each match as a card
-                   // Inside the fetch_fixtures function, modify the card output like this:
                 $output .= "<div class='col-md-4 mt-2 d-flex'>
                 <div class='card shadow-sm flex-grow-1'>
                     <div class='card-body'>
@@ -162,6 +156,12 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
           <a href="matches.php?league_id=3">
               <img src="assets/uel.png" alt="Serie A" class="img">
             </a>
+          <a href="matches.php?league_id=274">
+              <img src="assets/briliga1.png" alt="Serie A" class="img">
+            </a>
+          <a href="matches.php?league_id=30">
+              <img src="assets/afcwc.png" alt="Serie A" class="img">
+            </a>
         </ul>
     </div>
 </nav>
@@ -219,7 +219,6 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
         </button>
     </div>
 
-        <!-- Individual League Sections -->
         <?php foreach ($league_ids as $league_id): ?>
             <section class="mt-5">
                 <h2 class="section-title">
@@ -227,27 +226,33 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
                     switch ($league_id) {
                         case 39:
                             echo 'Premier League';
+                        break;
+                        case 140:
+                            echo 'La Liga';
+                        break;
+                        case 61:
+                            echo 'Bundesliga';
+                        break;
+                        case 135:
+                            echo 'Serie A';
+                        break;
+                        case 78:
+                            echo 'Ligue 1';
+                        break;
+                        case 2:
+                            echo 'UCL';
+                        break;
+                        case 3:
+                            echo 'UEL';
+                        break;
+                        case 274:
+                            echo 'Liga 1 Indonesia';
+                        break;
+                        case 30:
+                            echo 'AFC WC Qualifier';
                             break;
-                            case 140:
-                                echo 'La Liga';
-                                break;
-                                case 61:
-                                    echo 'Bundesliga';
-                                    break;
-                                    case 135:
-                                        echo 'Serie A';
-                                        break;
-                                        case 78:
-                                            echo 'Ligue 1';
-                                            break;
-                                                case 2:
-                                                echo 'UCL';
-                                                break;
-                                                    case 3:
-                                                    echo 'UEL';
-                                                    break;
-                                            }
-                                            ?>
+                    }
+                    ?>
                 </h2>
             </section>
             <div class="d-flex text-center text-white">
@@ -256,14 +261,12 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
         <?php endforeach; ?>
     </div>
 
-    <!-- Footer -->
     <footer class="text-center text-lg-start mt-5 pt-4">
         <div class="text-center p-3" style="background-color: black;">
             <p>&copy; 2024 Goaldrul. All rights reserved.</p>
         </div>
     </footer>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
