@@ -1,86 +1,123 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php
 
+include "service/apikey.php";
+$team_id = $_GET['team_id'];
+
+$team_url = 'https://v3.football.api-sports.io/teams';
+$params = ['id' => $team_id];
+
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $team_url . '?' . http_build_query($params));
+curl_setopt($ch, CURLOPT_HTTPHEADER, ['x-apisports-key: ' . $api_key]);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$team_response = curl_exec($ch);
+curl_close($ch);
+
+$host = 'localhost'; 
+$db = 'soccer';     
+$user = 'root';    
+$pass = '';
+
+// Membuat koneksi ke database
+$conn = new mysqli($host, $user, $pass, $db);
+
+// Periksa koneksi
+if ($conn->connect_error) {
+    die("Koneksi gagal: " . $conn->connect_error);
+}
+
+// Menangani pengiriman form
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $user_name = $conn->real_escape_string($_POST['user_name']);
+    $team_id = intval($_POST['team_id']);
+    $team_name = $conn->real_escape_string($_POST['team_name']);
+    $team_logo = $conn->real_escape_string($_POST['team_logo']);
+
+    $sql = "INSERT INTO favorites (user_name, team_id, team_name, team_logo) 
+            VALUES ('$user_name', $team_id, '$team_name', '$team_logo')";
+
+    if ($conn->query($sql) === TRUE) {
+        $message = "Data berhasil disimpan!";
+    } else {
+        $message = "Gagal menyimpan data: " . $conn->error;
+    }
+}
+
+
+// Ambil data tim dari API
+$teams = getTeamsFromApi();
+
+// Ambil daftar favorit dari database
+$favorites = [];
+$sql = "SELECT * FROM favorites ORDER BY created_at DESC";
+$result = $conn->query($sql);
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $favorites[] = $row;
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Goaldrul Match Schedule</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <title>Jadwal Bola - Tim Favorit</title>
 </head>
-
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="dashboardlogin.php">
-                <img src="assets/gd.png" class="img-fluid" alt="Logo Goaldrul"> 
-                GOALDRUL 
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user"></i> Profile</a>
-                        <ul class="dropdown-menu">
-                            <li>
-                            <a href="profile.php" class="dropdown-item">Profile</a> 
-                                <form action="" method="POST" class="d-inline">
-                                    <button type="submit" name="logout" class="dropdown-item">Logout</button>
-                                </form>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#"><i class="fas fa-star"></i> Favorite Team</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="upcoming.php"><i class="fas fa-calendar-alt"></i> Upcoming Matches</a>
-                    </li>
-                    <form class="d-flex" role="search">
-                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                        <button class="btn btn-outline-success" type="submit">Search</button>
-                    </form>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <h1>Tambah Tim Favorit Anda</h1>
+    <?php if (!empty($message)) : ?>
+        <p style="color: green;"><?= htmlspecialchars($message) ?></p>
+    <?php endif; ?>
+    <form method="POST">
+        <label for="user_name">Nama Anda:</label><br>
+        <input type="text" id="user_name" name="user_name" required><br><br>
 
-    <nav class="navbar bg-body-tertiary">
-    <div class="bottom_nav">
-        <ul>
-          <a href="Lpremierleague.php">
-              <img src="assets/premierleague.png" alt="Premier League" class="img">
-          </a>
-          <a href="Llaliga.php">
-              <img src="assets/laliga24.png" alt="La Liga" class="img">
-          </a>
-          <a href="Lligue1.php">
-              <img src="assets/ligue1.png" alt="Ligue 1" class="img">
-          </a>
-          <a href="Lbundesliga.php">
-              <img src="assets/bundesliga.png" alt="Bundesliga" class="img">
-          </a>
-          <a href="LserieA.php">
-              <img src="assets/serie_a.png" alt="Serie A" class="img">
-          </a>
-        </ul>
-    </div>
-</nav>
+        <label for="team_id">Pilih Tim Favorit:</label><br>
+        <select id="team_id" name="team_id" required>
+            <option value="">Pilih tim</option>
+            <?php foreach ($teams as $team) : ?>
+                <option value="<?= htmlspecialchars($team['id']) ?>" data-name="<?= htmlspecialchars($team['name']) ?>" data-logo="<?= htmlspecialchars($team['logo']) ?>">
+                    <?= htmlspecialchars($team['name']) ?>
+                </option>
+            <?php endforeach; ?>
+        </select><br><br>
 
-<section class="hero" id="home">
-      
-    </section>
+        <input type="hidden" id="team_name" name="team_name">
+        <input type="hidden" id="team_logo" name="team_logo">
 
-    <footer class="text-center text-lg-start mt-5 pt-4">
-        <div class="text-center p-3" style="background-color: #343a40;">
-            <p>&copy; 2024 Goaldrul. All rights reserved.</p>
-        </div>
-    </footer>
+        <button type="submit">Simpan</button>
+    </form>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <h2>Daftar Tim Favorit</h2>
+    <ul>
+        <?php if (!empty($favorites)) : ?>
+            <?php foreach ($favorites as $favorite) : ?>
+                <li>
+                    <strong><?= htmlspecialchars($favorite['user_name']) ?></strong> menyukai
+                    <img src="<?= htmlspecialchars($favorite['team_logo']) ?>" alt="Logo Tim" style="width:30px;">
+                    <strong><?= htmlspecialchars($favorite['team_name']) ?></strong>
+                </li>
+            <?php endforeach; ?>
+        <?php else : ?>
+            <li>Belum ada data tim favorit.</li>
+        <?php endif; ?>
+    </ul>
+
+    <script>
+        // Menyinkronkan input tersembunyi dengan data tim yang dipilih
+        const teamSelect = document.getElementById('team_id');
+        const teamNameInput = document.getElementById('team_name');
+        const teamLogoInput = document.getElementById('team_logo');
+
+        teamSelect.addEventListener('change', function () {
+            const selectedOption = teamSelect.options[teamSelect.selectedIndex];
+            teamNameInput.value = selectedOption.dataset.name || '';
+            teamLogoInput.value = selectedOption.dataset.logo || '';
+        });
+    </script>
 </body>
 </html>
+
+<?php $conn->close(); ?>
