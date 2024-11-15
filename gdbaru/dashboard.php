@@ -171,7 +171,7 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
 
 
 <div class="container mt-5">   
-    <h1 class="text-center mt-5 mb-5">Today's Matches</h1>
+    <h1 class="text-center text-white mt-5 mb-5">Today's Matches</h1>
         <div id="matchCarousel" class="carousel slide mt-3" data-bs-ride="carousel">
             <div class="carousel-inner">
                 <div class="carousel-item active">
@@ -251,7 +251,7 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
                     ?>
                 </h2>
             </section>
-            <div class="d-flex text-center">
+            <div class="d-flex text-center text-white">
                 <?php echo fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today); ?>
             </div>
         <?php endforeach; ?>
@@ -259,7 +259,7 @@ function fetch_fixtures($league_id, $api_key, $ch, $fixtures_url, $today) {
 
 
     <footer class="text-center text-lg-start mt-5 pt-4">
-        <div class="text-center p-3" style="background-color: #343a40;">
+        <div class="text-center p-3" style="background-color: black">
             <p>&copy; 2024 Goaldrul. All rights reserved.</p>
         </div>
     </footer>
