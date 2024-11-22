@@ -98,3 +98,16 @@ CREATE TABLE favorites (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE profiles (
+    user_id INT PRIMARY KEY,
+    bio TEXT,
+    birthday DATE,
+    country VARCHAR(50),
+    phone VARCHAR(20),
+    twitter VARCHAR(255),
+    facebook VARCHAR(255),
+    google_plus VARCHAR(255),
+    linkedin VARCHAR(255),
+    instagram VARCHAR(255),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
