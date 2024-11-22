@@ -2,6 +2,7 @@
 include "service/apikey.php";
 $fixtures_url = 'https://v3.football.api-sports.io/fixtures';
 include "service/database.php";
+$league_ids = [39, 140, 61, 135, 78, 2, 3, 274, 30];
 
 $league_id = isset($_GET['league_id']) ? (int)$_GET['league_id'] : 39;
 
@@ -11,8 +12,10 @@ $league_names = [
     61 => 'Bundesliga',
     135 => 'Serie A',
     78 => 'Ligue 1',
-    2 => 'UEFA Champions Leauge',
-    3 => 'UEFA Europe League'
+    2 => 'UEFA Champions League',
+    3 => 'UEFA Europa League',
+    274 => 'BRI Liga 1',
+    30 => 'AFC Asian Qualifier - WC'
 ];
 $league_name = $league_names[$league_id] ?? 'Unknown League';
 
@@ -44,14 +47,15 @@ $data = json_decode($response, true);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Football Matches</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="leaguestyle.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="upcoming.css">
+    <link rel="stylesheet" href="matches.css">
 </head>
 <body>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#">
+        <a class="navbar-brand" href="dashboardlogin.php">
             <img src="assets/gd.png" class="img-fluid" alt="Logo Goaldrul"> 
             GOALDRUL 
         </a>
@@ -71,70 +75,120 @@ $data = json_decode($response, true);
                     <a class="nav-link" href="#"><i class="fas fa-star"></i> Favorite Team</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#"><i class="fas fa-calendar-alt"></i> Upcoming Matches</a>
+                    <a class="nav-link" href="upcoming.php"><i class="fas fa-calendar-alt"></i> Upcoming Matches</a>
                 </li>
             </ul>
         </div>
     </div>
 </nav>
 
+<nav class="navbar bg-body-tertiary">
+    <div class="bottom_nav">
+        <ul>
+          <a href="matches.php?league_id=39">
+              <img src="assets/premierleague.png" alt="Premier League" class="img">
+          </a>
+          <a href="matches.php?league_id=140">
+              <img src="assets/laliga24.png" alt="La Liga" class="img">
+          </a>
+          <a href="matches.php?league_id=78">
+              <img src="assets/ligue1.png" alt="Ligue 1" class="img">
+          </a>
+          <a href="matches.php?league_id=61">
+              <img src="assets/bundesliga.png" alt="Bundesliga" class="img">
+          </a>
+          <a href="matches.php?league_id=135">
+              <img src="assets/serie_a.png" alt="Serie A" class="img">
+            </a>
+            <a href="matches.php?league_id=2">
+              <img src="assets/ucl.png" alt="Serie A" class="img">
+            </a>
+          <a href="matches.php?league_id=3">
+              <img src="assets/uel.png" alt="Serie A" class="img">
+            </a>
+          <a href="matches.php?league_id=274">
+              <img src="assets/briliga1.png" alt="Serie A" class="img">
+            </a>
+          <a href="matches.php?league_id=30">
+              <img src="assets/afcwc.png" alt="Serie A" class="img">
+            </a>
+        </ul>
+    </div>
+</nav>
+
 <div class="container mt-4">
-    <h1>Upcoming <?php echo $league_name; ?> Matches</h1>
+    <h2 class="text-center mt-5 mb-3">Upcoming <?php echo $league_name; ?> Matches</h2>
 
     <div id="matches-container">
-        <?php
-        $current_day = '';
-        
-        if (isset($data['response']) && !empty($data['response'])) {
-            foreach ($data['response'] as $match) {
-                $home_team = $match['teams']['home']['name'];
-                $away_team = $match['teams']['away']['name'];
-                $home_score = $match['goals']['home'];
-                $away_score = $match['goals']['away'];
-                $home_logo = $match['teams']['home']['logo'];
-                $away_logo = $match['teams']['away']['logo'];
-                $match_status = $match['fixture']['status']['long'];
-                $match_date = $match['fixture']['date'];
-                $formatted_date = date('H:i', strtotime($match_date));
-                $match_day = date('l, d M Y', strtotime($match_date));
-                $home_team_id = $match['teams']['home']['id'];
-                $away_team_id = $match['teams']['away']['id'];
+        <ul class="list-group">
+            <?php
+            $current_day = '';
 
-                if ($current_day !== $match_day) {
-                    $current_day = $match_day;
+            if (isset($data['response']) && !empty($data['response'])) {
+                foreach ($data['response'] as $match) {
+                    $home_team = $match['teams']['home']['name'];
+                    $away_team = $match['teams']['away']['name'];
+                    $home_score = $match['goals']['home'];
+                    $away_score = $match['goals']['away'];
+                    $home_logo = $match['teams']['home']['logo'];
+                    $away_logo = $match['teams']['away']['logo'];
+                    $match_league = $match['league']['name'];
+                    $match_status = $match['fixture']['status']['long'];
+                    $match_date = $match['fixture']['date'];
+                    date_default_timezone_set('Asia/Bangkok');
+                    $formatted_date = date('H:i', strtotime($match_date));
+                    $match_day = date('l, d M Y', strtotime($match_date));
+                    $home_team_id = $match['teams']['home']['id'];
+                    $away_team_id = $match['teams']['away']['id'];
 
-                    echo "<hr style='border-top: 2px solid #000;'>";
-                    echo "<h4 class='mt-4 mb-4 text-center'>$current_day</h4>";
+                    if ($current_day !== $match_day) {
+                        $current_day = $match_day;
+                        echo "<h4 class='mt-4 mb-4 text-center'><strong>$current_day</strong></h4>";
+                    }
+                    echo "<li class='list-group-item match-item'>";
+                    echo "    <div class='d-flex align-items-center match-container'>";
+                    echo "        <div class='d-flex align-items-center team-info' style='flex: 1;'>";
+                    echo "            <img src='$home_logo' alt='$home_team Logo' class='img-fluid me-2' style='width: 50px; height: 50px;'>";
+                    echo "            <a href='team_info.php?team_id=$home_team_id' class='text-truncate home-team-name' style='flex-grow: 1;'>$home_team</a>";
+                    echo "        </div>";
+                    
+                    if ($home_score === null || $away_score === null) {
+                        echo "        <div class='score-container d-flex align-items-center justify-content-center' style='flex: 0 0 60px;'>";
+                        echo "            <strong>VS</strong>";
+                        echo "        </div>";
+                    } else {
+                        echo "        <div class='score-container d-flex align-items-center justify-content-center' style='flex: 0 0 60px;'>";
+                        echo "            <strong>$home_score - $away_score</strong>";
+                        echo "        </div>";
+                    }
+                    
+                    echo "        <div class='d-flex align-items-center team-info justify-content-end' style='flex: 1;'>";
+                    echo "            <a href='team_info.php?team_id=$away_team_id' class='text-truncate away-team-name me-2' style='text-align: right; flex-grow: 1;'>$away_team</a>";
+                    echo "            <img src='$away_logo' alt='$away_team Logo' class='img-fluid' style='width: 50px; height: 50px;'>";
+                    echo "        </div>";
+                    echo "    </div>";
+                    
+                    echo "    <div class='d-flex justify-content-center text-muted match-details mt-2'>";
+                    echo "        <div class='text-center' style='flex: 1;'>";
+                    echo "            <small>$match_league</small><br>";
+                    echo "            <small>$formatted_date</small>";
+                    echo "        </div>";
+                    echo "    </div>";
+                    echo "</li>";
                 }
-
-                echo "<div class='row mb-3 match-info align-items-center' id='match-{$match['fixture']['id']}'>";
-                echo "    <div class='col-md-5 d-flex justify-content-end align-items-center'>";
-                echo "        <img src='$home_logo' alt='$home_team Logo' class='img-fluid' style='width: 30px; height: 30px; margin-right: 10px;'>";
-                echo "        <a href='team_info.php?team_id=$home_team_id'>$home_team</a>";
-                echo "    </div>";
-
-                echo "    <div class='col-md-2 text-center' id='score-{$match['fixture']['id']}'>";
-                echo "        <h3>$home_score - $away_score</h3>";
-                echo "    </div>";
-
-                echo "    <div class='col-md-5 d-flex justify-content-start align-items-center'>";
-                echo "        <a href='team_info.php?team_id=$away_team_id'>$away_team</a>";
-                echo "        <img src='$away_logo' alt='$away_team Logo' class='img-fluid' style='width: 30px; height: 30px; margin-left: 10px;'>";
-                echo "    </div>";
-                echo "    <p>$formatted_date</p>"; 
-
-                echo "</div>";
-
-                echo "<div class='match-details text-center'>";
-                echo "    <p>Status: $match_status</p>"; 
-                echo "</div>";
+            } else {
+                echo "<p>There are no upcoming or live matches.</p>";
             }
-        } else {
-            echo "<p>There are no upcoming or live matches.</p>";
-        }
-        ?>
+            ?>
+        </ul>
     </div>
 </div>
+
+<footer class="text-center text-lg-start mt-5 pt-4">
+        <div class="text-center p-3">
+            <p>&copy; 2024 Goaldrul. All rights reserved.</p>
+        </div>
+    </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
