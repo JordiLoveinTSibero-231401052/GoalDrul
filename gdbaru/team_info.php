@@ -64,11 +64,12 @@ curl_close($ch);
     <title>Team Information</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="teaminfo.css">
 </head>
 <body>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
+    <div class="container-fluid">
         <a class="navbar-brand" href="dashboard.php">
             <img src="assets/gd.png" class="img-fluid" alt="Logo Goaldrul"> 
                 GOALDRUL 
@@ -89,9 +90,8 @@ curl_close($ch);
                     <a class="nav-link" href="#"><i class="fas fa-star"></i> Favorite Team</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#"><i class="fas fa-calendar-alt"></i> Upcoming Matches</a>
+                    <a class="nav-link" href="upcoming.php"><i class="fas fa-calendar-alt"></i> Upcoming Matches</a>
                 </li>
-               
             </ul>
         </div>
     </div>
@@ -101,66 +101,109 @@ curl_close($ch);
     <?php if (isset($error_message)): ?>
         <div class="alert alert-danger"><?= $error_message; ?></div>
     <?php else: ?>
-        <div class='text-center mb-4'>
+        <div class='text-center mb-3'>
             <img src='<?= $team_logo; ?>' alt='<?= $team_name; ?> Logo' class='img-fluid mb-2' style='width: 100px; height: 100px;'>
-            <h1 class='display-4'><?= $team_name; ?></h1>
+            <h1 class='display-4 mb-5'><?= $team_name; ?></h1>
         </div>
 
-        <h2> Team Information </h2>
-        <div class='row'>
-            <div class='col-md-6'>
-                <p><strong>Country:</strong> <?= $team_country; ?></p>
-                <p><strong>Founded:</strong> <?= $team_founded; ?></p>
-                <p><strong>Venue:</strong> <?= $team_venue; ?></p>
-                <p><strong>Capacity:</strong> <?= $team_capacity; ?></p>
-            </div>
-        </div>
+        <div class="row d-flex justify-content-center">
+    <div class="col d-flex flex-column align-items-center">
+        <p><strong>Country:</strong> <?= $team_country; ?></p>
+        <p><strong>Founded:</strong> <?= $team_founded; ?></p>
+        <p><strong>Venue:</strong> <?= $team_venue; ?></p>
+        <p><strong>Capacity:</strong> <?= $team_capacity; ?></p>
+    </div>
+</div>
 
+        
         <?php if (!empty($players_list)): ?>
-            <h2 class='mt-5'>Player List</h2>
-            <ul class='list-group'>
-                <?php foreach ($players_list as $player): ?>
-                    <li class='list-group-item d-flex justify-content-between align-items-center'>
-                        <?= $player['name']; ?>
-                        <span class='badge bg-primary'><?= $player['position']; ?></span>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
+            <h2 class='mt-5 d-flex justify-content-center'>Player List</h2>
+
+            <div class="accordion" id="playersAccordion">
+                <?php 
+                    $positions = ['Goalkeeper' => [], 'Defender' => [], 'Midfielder' => [], 'Forward' => []];
+                    
+                    foreach ($players_list as $player) {
+                        if (in_array($player['position'], array_keys($positions))) {
+                            $positions[$player['position']][] = $player;
+                        } else {
+                            $positions['Attacker'][] = $player;
+                        }
+                    }
+
+                    foreach ($positions as $position => $players): 
+                        if (!empty($players)):
+                ?>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading<?= $position ?>">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?= $position ?>" aria-expanded="true" aria-controls="collapse<?= $position ?>">
+                            <?= ucfirst($position); ?>s
+                        </button>
+                    </h2>
+                    <div id="collapse<?= $position ?>" class="accordion-collapse collapse" aria-labelledby="heading<?= $position ?>" data-bs-parent="#playersAccordion">
+                        <div class="accordion-body">
+                            <ul class='list-group'>
+                                <?php foreach ($players as $player): ?>
+                                    <li class='list-group-item d-flex justify-content-between align-items-center'>
+                                        <div class="d-flex align-items-center">
+                                            <img src="<?= $player['photo']; ?>" alt="<?= $player['name']; ?>" class="img-fluid me-2" style="width: 40px; height: 40px;">
+                                            <span><?= $player['name']; ?></span>
+                                        </div>
+                                        <span class='badge bg-primary'><?= $player['position']; ?></span>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; endforeach; ?>
+            </div>
         <?php else: ?>
             <div class='alert alert-warning'>No players found for this team.</div>
         <?php endif; ?>
 
         <?php if (!empty($recent_matches)): ?>
-            <h2 class='mt-5'>Last 20 Matches</h2>
-            <ul class='list-group'>
-                <?php foreach ($recent_matches as $match): ?>
-                    <li class='list-group-item'>
-                    <div class='d-flex justify-content-between align-items-center'>
+    <h2 class='mt-5 mb-3 d-flex justify-content-center'>Last 20 Matches</h2>
+    <ul class='list-group'>
+        <?php foreach ($recent_matches as $match): ?>
+            <li class='list-group-item'>
+                <div class="d-flex align-items-center">
 
-                        <div class='team-info d-flex align-items-center'>
-                            <img src='<?= $match['teams']['home']['logo']; ?>' alt='<?= $match['teams']['home']['name']; ?> Logo' class='img-fluid me-2' style='width: 30px; height: 30px;'>
-                            <a href='team_info.php?team_id=<?= $match['teams']['home']['id']; ?>'><?= $match['teams']['home']['name']; ?></a>
-                        </div>
+                <div class="d-flex align-items-center" style="flex: 1;">
+                    <img src='<?= $match['teams']['home']['logo']; ?>' alt='<?= $match['teams']['home']['name']; ?> Logo' class='img-fluid me-2' style='width: 50px; height: 50px;'>
+                    <a href='team_info.php?team_id=<?= $match['teams']['home']['id']; ?>' class="text-truncate home-team-name" style="flex-grow: 1; max-width: 100%;"><?= $match['teams']['home']['name']; ?></a>
+                </div>
 
-                        <div class='score'>
-                            <?= $match['goals']['home']; ?> - <?= $match['goals']['away']; ?>
-                        </div>
-
-                        <div class='team-info d-flex align-items-center'>
-                            <a href='team_info.php?team_id=<?= $match['teams']['away']['id']; ?>'><?= $match['teams']['away']['name']; ?></a>
-                            <img src='<?= $match['teams']['away']['logo']; ?>' alt='<?= $match['teams']['away']['name']; ?> Logo' class='img-fluid ms-2' style='width: 30px; height: 30px;'>
-                        </div>
+                    <div class="d-flex align-items-center" style="flex: 0 0 50px; text-align: center;">
+                        <strong><?= $match['goals']['home']; ?> - <?= $match['goals']['away']; ?></strong>
                     </div>
-                        <small class='text-muted'>Competition: <?= $match['league']['name']; ?></small><br>
-                        <small class='text-muted'>Status: <?= $match['fixture']['status']['long']; ?></small>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        <?php else: ?>
-            <div class='alert alert-warning'>No recent matches found for this team.</div>
-        <?php endif; ?>
+
+                    <div class="d-flex align-items-center justify-content-end" style="flex: 1;">
+                        <a href='team_info.php?team_id=<?= $match['teams']['away']['id']; ?>' class="text-truncate away-team-name me-2" style="flex-grow: 1; text-align: right;"><?= $match['teams']['away']['name']; ?></a>
+                        <img src='<?= $match['teams']['away']['logo']; ?>' alt='<?= $match['teams']['away']['name']; ?> Logo' class='img-fluid' style='width: 50px; height: 50px;'>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center text-muted">
+                    <div class="text-center mt-2    " style="flex: 1;">
+                        <small><?= $match['league']['name']; ?></small><br>
+                        <small><?= $match['fixture']['status']['long']; ?></small>
+                    </div>
+                </div>
+            </li>
+        <?php endforeach; ?>
+    </ul>
+<?php else: ?>
+    <div class='alert alert-warning'>No recent matches found for this team.</div>
+<?php endif; ?>
     <?php endif; ?>
 </div>
+
+<footer class="text-center text-lg-start mt-5 pt-4">
+        <div class="text-center p-3">
+            <p>&copy; 2024 Goaldrul. All rights reserved.</p>
+        </div>
+    </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
