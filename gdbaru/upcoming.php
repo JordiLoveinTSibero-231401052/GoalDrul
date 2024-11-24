@@ -53,43 +53,46 @@ usort($next_week_matches, function ($a, $b) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upcoming Matches - Next 7 Days</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="upcoming.css">
-    <link rel="stylesheet" href="matches.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="style.css?v=<?php echo filemtime('style.css'); ?>">
+    <link rel="stylesheet" href="teaminfo.css?v=<?php echo filemtime('teaminfo.css'); ?>">
+
 </head>
 <body>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="dashboard.php">
-            <img src="assets/gd.png" class="img-fluid" alt="Logo Goaldrul"> 
-            GOALDRUL 
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user"></i> Profile</a>
-                    <ul class="dropdown-menu">
-                        <li>
-                            <form action="" method="POST" class="d-inline">
-                                <button type="submit" name="logout" class="dropdown-item">Logout</button>
-                            </form>
-                        </li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#"><i class="fas fa-star"></i> Favorite Team</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="upcoming.php"><i class="fas fa-calendar-alt"></i> Upcoming Matches</a>
-                </li>
-            </ul>
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <img src="assets/gd.png" class="img-fluid" alt="Logo Goaldrul"> 
+                GOALDRUL 
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user"></i> Profile</a>
+                        <ul class="dropdown-menu">
+                            <li>
+                            <a href="profile.php" class="dropdown-item">Profile</a> 
+                                <form action="" method="POST" class="d-inline">
+                                    <button type="submit" name="logout" class="dropdown-item">Logout</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="favoriteteam.php"><i class="fas fa-star"></i> Favorite Team</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="upcoming.php"><i class="fas fa-calendar-alt"></i> Upcoming Matches</a>
+                    </li>
+                  
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
 <nav class="navbar bg-body-tertiary">
     <div class="bottom_nav">
@@ -126,7 +129,7 @@ usort($next_week_matches, function ($a, $b) {
 </nav>
 
 <div class="container mt-4">
-<h2 class="text-center mt-4 mb-3">Upcoming Matches Next 7 Days</h2>
+<h2 class="text-center mt-5 mb-2">Upcoming Matches Next 7 Days</h2>
 
     <?php
     if (!empty($next_week_matches)) {
@@ -152,7 +155,7 @@ usort($next_week_matches, function ($a, $b) {
 
             if ($current_day !== $match_day) {
                 $current_day = $match_day;
-                echo "<h4 class='text-center mt-4 mb-3'><strong>$current_day</strong></h4>";
+                echo "<h4 class='text-center mt-5 mb-2'><strong>$current_day</strong></h4>";
             }
 
             // Menampilkan pertandingan dalam list
@@ -166,7 +169,7 @@ usort($next_week_matches, function ($a, $b) {
             // Show "VS" if score is not available or match has not started
             if ($home_score === null || $away_score === null) {
                 echo "        <div class='score-container d-flex align-items-center justify-content-center' style='flex: 0 0 60px;'>";
-                echo "            <strong>VS</strong>"; // Display "VS" when no scores
+                echo "            <small>$formatted_date</small>"; // Display "VS" when no scores
                 echo "        </div>";
             } else {
                 echo "        <div class='score-container d-flex align-items-center justify-content-center' style='flex: 0 0 60px;'>";
@@ -183,7 +186,6 @@ usort($next_week_matches, function ($a, $b) {
             echo "    <div class='d-flex justify-content-center text-muted match-details mt-2'>";
             echo "        <div class='text-center' style='flex: 1;'>";
             echo "            <small>$match_league</small><br>";
-            echo "            <small>$formatted_date</small>";
             echo "        </div>";
             echo "    </div>";
             echo "</li>";
@@ -192,7 +194,7 @@ usort($next_week_matches, function ($a, $b) {
         }
         echo "</ul>";
     } else {
-        echo "<p>There are no upcoming matches in the next 7 days.</p>";
+        echo "<p class='mt-5 text-center'>There are no upcoming matches in the next 7 days.</p>";
     }
     ?>
 </div>
