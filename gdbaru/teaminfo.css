@@ -3,6 +3,13 @@ body {
     background-color: white; 
 }
 
+.match-item {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+}
+
 .team-home {
     margin-left: 10px;
     text-align: left;
