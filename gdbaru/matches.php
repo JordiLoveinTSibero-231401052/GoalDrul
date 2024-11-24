@@ -47,40 +47,46 @@ $data = json_decode($response, true);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Football Matches</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="upcoming.css">
-    <link rel="stylesheet" href="matches.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="style.css?v=<?php echo filemtime('style.css'); ?>">
+    <link rel="stylesheet" href="teaminfo.css?v=<?php echo filemtime('teaminfo.css'); ?>">
 </head>
 <body>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="dashboardlogin.php">
-            <img src="assets/gd.png" class="img-fluid" alt="Logo Goaldrul"> 
-            GOALDRUL 
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user"></i> Profile</a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="register.php">Register</a></li>
-                        <li><a class="dropdown-item" href="login.php">Login</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#"><i class="fas fa-star"></i> Favorite Team</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="upcoming.php"><i class="fas fa-calendar-alt"></i> Upcoming Matches</a>
-                </li>
-            </ul>
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <img src="assets/gd.png" class="img-fluid" alt="Logo Goaldrul"> 
+                GOALDRUL 
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user"></i> Profile</a>
+                        <ul class="dropdown-menu">
+                            <li>
+                            <a href="profile.php" class="dropdown-item">Profile</a> 
+                                <form action="" method="POST" class="d-inline">
+                                    <button type="submit" name="logout" class="dropdown-item">Logout</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="favoriteteam.php"><i class="fas fa-star"></i> Favorite Team</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="upcoming.php"><i class="fas fa-calendar-alt"></i> Upcoming Matches</a>
+                    </li>
+                  
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
 <nav class="navbar bg-body-tertiary">
     <div class="bottom_nav">
@@ -143,7 +149,7 @@ $data = json_decode($response, true);
 
                     if ($current_day !== $match_day) {
                         $current_day = $match_day;
-                        echo "<h4 class='mt-4 mb-4 text-center'><strong>$current_day</strong></h4>";
+                        echo "<h4 class='mt-5 mb-2 text-center'><strong>$current_day</strong></h4>";
                     }
                     echo "<li class='list-group-item match-item'>";
                     echo "    <div class='d-flex align-items-center match-container'>";
@@ -153,8 +159,8 @@ $data = json_decode($response, true);
                     echo "        </div>";
                     
                     if ($home_score === null || $away_score === null) {
-                        echo "        <div class='score-container d-flex align-items-center justify-content-center' style='flex: 0 0 60px;'>";
-                        echo "            <strong>VS</strong>";
+                        echo "        <div class='score-container d-flex align-items-center justify-content-center' style='flex: 0 0 px;'>";
+                        echo "            <small>$formatted_date</small>";
                         echo "        </div>";
                     } else {
                         echo "        <div class='score-container d-flex align-items-center justify-content-center' style='flex: 0 0 60px;'>";
@@ -170,14 +176,12 @@ $data = json_decode($response, true);
                     
                     echo "    <div class='d-flex justify-content-center text-muted match-details mt-2'>";
                     echo "        <div class='text-center' style='flex: 1;'>";
-                    echo "            <small>$match_league</small><br>";
-                    echo "            <small>$formatted_date</small>";
                     echo "        </div>";
                     echo "    </div>";
                     echo "</li>";
                 }
             } else {
-                echo "<p>There are no upcoming or live matches.</p>";
+                echo "<p class='mt-5 text-center'>There are no upcoming or live matches.</p>";
             }
             ?>
         </ul>
