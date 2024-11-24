@@ -63,40 +63,45 @@ curl_close($ch);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Team Information</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="teaminfo.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="style.css?v=<?php echo filemtime('style.css'); ?>">
+    <link rel="stylesheet" href="teaminfo.css?v=<?php echo filemtime('teaminfo.css'); ?>">
 </head>
 <body>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="dashboard.php">
-            <img src="assets/gd.png" class="img-fluid" alt="Logo Goaldrul"> 
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <img src="assets/gd.png" class="img-fluid" alt="Logo Goaldrul"> 
                 GOALDRUL 
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user"></i> Profile</a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="register.php">Register</a></li>
-                        <li><a class="dropdown-item" href="login.php">Login</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#"><i class="fas fa-star"></i> Favorite Team</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="upcoming.php"><i class="fas fa-calendar-alt"></i> Upcoming Matches</a>
-                </li>
-            </ul>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user"></i> Profile</a>
+                        <ul class="dropdown-menu">
+                            <li>
+                            <a href="profile.php" class="dropdown-item">Profile</a> 
+                                <form action="" method="POST" class="d-inline">
+                                    <button type="submit" name="logout" class="dropdown-item">Logout</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="favoriteteam.php"><i class="fas fa-star"></i> Favorite Team</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="upcoming.php"><i class="fas fa-calendar-alt"></i> Upcoming Matches</a>
+                    </li>
+                  
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
-
+    </nav>
 <div class="container mt-4">
     <?php if (isset($error_message)): ?>
         <div class="alert alert-danger"><?= $error_message; ?></div>
