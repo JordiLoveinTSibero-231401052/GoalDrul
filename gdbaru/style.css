@@ -1,7 +1,7 @@
 body {
     font-family: 'Roboto', sans-serif;
-    background-color: white;
-    /* min-height: 1000px; */
+    background-image: url(assets/bg.jpg);
+    color: black;
 }
 .hero{
     height:1000px
@@ -83,7 +83,7 @@ a {
 }
 
 footer {
-    background-color: #343a40;
+    background-color: black;
     height: 100px;
 }
 
@@ -161,9 +161,6 @@ footer p {
     min-width: 50px; /* Memberikan lebar minimum agar skor tidak terlalu kecil */
 }
 
-.row {
-    background-color: #ffffff;
-}
 
 .col-md-6 {
     margin-top: 20px;
@@ -182,7 +179,7 @@ section {
 .bottom_nav{
     width: 100%;
     background: #f9f9f9;
-    height: 45px;
+    height: 50px;
     padding: 0 50px;
   }
   
@@ -225,3 +222,56 @@ section {
     font-style: italic;
     color: #666;
 }
+
+.pagination .page-item .page-link {
+    width: 60px; /* Ukuran lebar tombol */
+    height: 60px; /* Ukuran tinggi tombol */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%; /* Membuat tombol berbentuk bulat */
+    margin: 5px; /* Jarak antar tombol */   
+    background-color: #ffffff; /* Warna latar */
+    transition: all 0.3s ease; /* Animasi transisi */
+}
+
+.pagination .page-item .page-link img {
+    width: 30px; /* Ukuran logo liga di tombol */
+    height: 30px;
+}
+
+.pagination .page-item:hover .page-link {
+    background-color: green;
+    color: #ffffff;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #007bff;
+    color: #ffffff;
+    border-color: #0056b3;
+}
+
+html, body {
+    height: 100%; /* Pastikan seluruh halaman mengambil tinggi penuh */
+    margin: 0;    /* Hapus margin default */
+    display: flex;
+    flex-direction: column;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    flex: 1; /* Membuat konten utama mengambil sisa ruang */
+}
+
+footer {
+    text-align: center;
+    padding: 1rem;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
