@@ -14,25 +14,58 @@ if (!isset($_SESSION["is_login"]) || !isset($_SESSION["user_id"])) {
 }
 
 
+
 // Mengambil data profile berdasarkan user_id
 $user_id = $_SESSION["user_id"];
-$stmt = $mysqli->prepare("SELECT * FROM profiles WHERE user_id = ?");
+$username = $_SESSION['username'];
+
+// if (isset($_SESSION['username'])) {
+//     $username = $_SESSION['username'];
+
+//     // Ambil email berdasarkan username
+//     $sql = "SELECT email FROM users WHERE username = ?";
+//     $stmt = $mysqli->prepare($sql);
+//     $stmt->bind_param('s', $username);
+//     $stmt->execute();
+//     $result = $stmt->get_result();
+
+//     if ($result->num_rows > 0) {
+//         $user = $result->fetch_assoc();
+//         $_SESSION['email'] = $user['email']; // Simpan email ke sesi
+//         echo "Email Anda: " . htmlspecialchars($email]);
+//     } else {
+//         echo "Pengguna tidak ditemukan.";
+//     }
+
+//     $stmt->close();
+    
+// } else {
+//     echo "Anda belum login.";
+// }
+
+$bio = $birthday = $country = $phone = $twitter = $facebook = $google_plus = $linkedin = $instagram = '';
+
+// $stmt = $mysqli->prepare("UPDATE profiles SET bio = ?, birthday = ?, country = ?, phone = ? WHERE user_id = ?");
+$stmt = $mysqli->prepare("SELECT bio, birthday, country, phone,  twitter , facebook , google_plus , linkedin , instagram , profile_photo FROM profiles WHERE user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$result = $stmt->get_result();
-$data = $result->fetch_assoc();
+$stmt->bind_result($bio, $birthday, $country, $phone, $twitter , $facebook , $google_plus , $linkedin , $instagram , $profile_photo);
+
+$stmt->fetch();
+$stmt->close();
+
 
 // echo $data['bio'];
 // Pastikan kode ini diletakkan sebelum form atau bagian yang membutuhkan variabel
-if (isset($_POST['update_profile'])) {
-    // Inisialisasi variabel dari form
-    $bio = isset($_POST['bio']) ? $_POST['bio'] : '';  
-    $birthday = isset($_POST['birthday']) ? $_POST['birthday'] : '';  
-    $country = isset($_POST['country']) ? $_POST['country'] : '';  
-    $phone = isset($_POST['phone']) ? $_POST['phone'] : '';  
+    // if (isset($_POST['update_profile'])) {
+    //     // Inisialisasi variabel dari form
+    //     $bio = isset($_POST['bio']) ? $_POST['bio'] : '';  
+    //     $birthday = isset($_POST['birthday']) ? $_POST['birthday'] : '';  
+    //     $country = isset($_POST['country']) ? $_POST['country'] : '';  
+    //     $phone = isset($_POST['phone']) ? $_POST['phone'] : '';  
 
-    // Simpan ke database atau lakukan proses lainnya
-}
+    //     // Simpan ke database atau lakukan proses lainnya
+    // }
 
 // Update Profile
 if (isset($_POST['update_info'])) {
@@ -42,8 +75,22 @@ if (isset($_POST['update_info'])) {
     $country = $_POST['country'];
     $phone = $_POST['phone'];
 
-    $stmt = $mysqli->prepare("UPDATE profiles SET bio = ?, birthday = ?, country = ?, phone = ? WHERE user_id = ?");
-    $stmt->bind_param("ssssi", $bio, $birthday, $country, $phone, $user_id);
+    
+    $stmt = $mysqli->prepare("SELECT user_id FROM profiles WHERE user_id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $stmt->store_result();
+
+    if ($stmt->num_rows > 0) {
+        // Jika sudah ada, lakukan update
+        $stmt = $mysqli->prepare("UPDATE profiles SET bio = ?, birthday = ?, country = ?, phone = ? WHERE user_id = ?");
+        $stmt->bind_param("sssii", $bio, $birthday, $country, $phone, $user_id);
+    } else {
+        // Jika belum ada, lakukan insert
+        $stmt = $mysqli->prepare("INSERT INTO profiles (user_id, bio, birthday, country, phone) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("issss", $user_id, $bio, $birthday, $country, $phone);
+    }
+
     if ($stmt->execute()) {
         echo "Info updated successfully!";
     } else {
@@ -69,6 +116,46 @@ if (isset($_POST['update_social_links'])) {
     }
     $stmt->close();
 }
+
+if (isset($_POST['update_profile'])) {
+    $target_dir = "uploads/";
+
+    // Ekstrak ekstensi file
+    $imageFileType = strtolower(pathinfo($_FILES["profile_photo"]["name"], PATHINFO_EXTENSION));
+
+    // Validasi file (ukuran dan tipe)
+    if ($_FILES["profile_photo"]["size"] > 500000) {
+        die("File terlalu besar.");
+    }
+
+    $allowed_types = ["jpg", "jpeg", "png", "gif"];
+    if (!in_array($imageFileType, $allowed_types)) {
+        die("Hanya file JPG, JPEG, PNG, dan GIF yang diperbolehkan.");
+    }
+
+    // Generate nama file unik
+    $unique_filename = uniqid('profile_', true) . '.' . $imageFileType;
+    $target_file = $target_dir . $unique_filename;
+
+    // Pindahkan file ke direktori target
+    if (move_uploaded_file($_FILES["profile_photo"]["tmp_name"], $target_file)) {
+        // Update path gambar di database
+        $stmt = $mysqli->prepare("UPDATE profiles SET profile_photo = ? WHERE user_id = ?");
+        $stmt->bind_param("ss", $target_file, $user_id);
+
+        if ($stmt->execute()) {
+            echo "Foto profil berhasil diperbarui.";
+            header("Location: profile.php"); // Redirect kembali ke halaman profil
+        } else {
+            echo "Terjadi kesalahan saat mengupdate database.";
+        }
+
+        $stmt->close();
+    } else {
+        echo "Gagal mengunggah file.";
+    }
+}
+
 
 // Update Password
 if (isset($_POST['update_password'])) {
@@ -139,14 +226,21 @@ if (isset($_POST['update_password'])) {
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style2.css">
-
+    <style>
+        .profile-photo {
+            width: 20%; /* Lebar gambar */
+            height: 20%; /* Tinggi gambar */
+            object-fit: cover; /* Menyesuaikan gambar tanpa merusak rasio */
+            border-radius: 50%; /* Opsional: buat gambar jadi lingkaran */
+        }
+    </style>
 </head>
 
 <body>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="dashboard.php">
+            <a class="navbar-brand" href="dashboardlogin.php">
                 <img src="assets/gd.png" class="img-fluid" alt="Logo Goaldrul"> 
                 GOALDRUL 
             </a>
@@ -193,37 +287,34 @@ if (isset($_POST['update_password'])) {
                             href="#account-info">Info</a>
                         <a class="list-group-item list-group-item-action" data-toggle="list"
                             href="#account-social-links">Social links</a>
-                        <a class="list-group-item list-group-item-action" data-toggle="list"
-                            href="#account-connections">Connections</a>
-                        <a class="list-group-item list-group-item-action" data-toggle="list"
-                            href="#account-notifications">Notifications</a>
+                        
                     </div>
                 </div>
                 <div class="col-md-9">
                     <div class="tab-content">
                         <div class="tab-pane fade active show" id="account-general">
                             <div class="card-body media align-items-center">
-                                <img src="https://bootdey.com/img/Content/avatar/avatar1.png" alt
-                                    class="d-block ui-w-80">
+                            <img src="<?php echo htmlspecialchars($profile_photo); ?>" alt="Foto Profil" class="profile-photo" >                            
                             </div>
+
                             <hr class="border-light m-0">
                             <div class="card-body">
+                                <form action="#" method="POST" enctype="multipart/form-data">
                                 <div class="form-group">
-                                    <label class="form-label">Username</label>
-                                    <input type="text" class="form-control mb-1" value="nmaxwell">
+                                    <label for="profile_photo">Upload Foto Profil:</label>
+                                    <input type="file" name="profile_photo" id="profile_photo" accept="image/*" required>
+                                    <input type="submit" name="update_profile">
                                 </div>
+                                </form>
                                 <div class="form-group">
                                     <label class="form-label">Name</label>
                                     <input type="text" class="form-control" value="Nelle Maxwell">
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">E-mail</label>
-                                    <input type="text" class="form-control mb-1" value="nmaxwell@mail.com">
-                                    <div class="alert alert-warning mt-3">
-                                        Your email is not confirmed. Please check your inbox.<br>
-                                        <a href="javascript:void(0)">Resend confirmation</a>
-                                    </div>
-                                </div>
+                                <form>
+                                    <label for="username">Username:</label>
+                                    <input type="text" id="username" class="form-control mb-1" value="<?php echo htmlspecialchars($username); ?>" readonly>
+                                </form>
+                                
                             </div>
                         </div>
                         <div class="tab-pane fade" id="account-change-password">
@@ -254,23 +345,23 @@ if (isset($_POST['update_password'])) {
                                     <form action="" method="POST">
                                         <div class="form-group">
                                             <label class="form-label">Biografi</label>
-                                            <textarea type="text" class="form-control" name="bio"><?php echo htmlspecialchars($data['bio']); ?></textarea>
+                                            <textarea type="text" class="form-control" name="bio"><?php echo htmlspecialchars($bio); ?></textarea>
                                         </div>
                                         <div class="form-group">
                                             <label class="form-label">Birthday</label>
-                                            <input type="date" name="birthday" value="<?php echo $data['birthday']; ?>">
+                                            <input type="date" name="birthday" value="<?php echo $birthday; ?>">
                                         </div>
                                         <div class="form-group">
                                             <label class="form-label">Country</label>
-                                            <input placeholder="Indonesia" type="text" class="form-control" name="country" value="<?php echo htmlspecialchars($data['country']); ?>">
+                                            <input placeholder="Indonesia" type="text" class="form-control" name="country" value="<?php echo htmlspecialchars($country); ?>">
                                         </div>
                                         <hr class="border-light m-0">
                                         <div class="card-body pb-2">
                                             <h6 class="mb-4" >Contacts</h6>
-                                            <input placeholder="+123 456789" type="text" class="form-control" name="phone" value="<?php echo htmlspecialchars($data['phone']); ?>">
+                                            <input placeholder="+123 456789" type="text" class="form-control" name="phone" value="<?php echo htmlspecialchars($phone); ?>">
                                         </div>
                                         <div class="text-right mt-3">
-                                            <input type="submit" name="update_" value="Save Changes">
+                                            <input type="submit" name="update_info" value="Save Changes">
                                         </div>
                                     </form>
                                 </div>
@@ -280,127 +371,29 @@ if (isset($_POST['update_password'])) {
                                 <form action="" method="POST">
                                     <div class="form-group">
                                         <label class="form-label">Twitter</label>
-                                        <input type="url" class="form-control" name="twitter" value="<?php echo htmlspecialchars($data['twitter']); ?>">
+                                        <input type="url" class="form-control" name="twitter" value="<?php echo htmlspecialchars($twitter); ?>">
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Facebook</label>
-                                        <input type="url" class="form-control" name="facebook" value="<?php echo htmlspecialchars($data['facebook']); ?>">
+                                        <input type="url" class="form-control" name="facebook" value="<?php echo htmlspecialchars($facebook); ?>">
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Google+</label>
-                                        <input type="url" class="form-control" name="google_plus" value="<?php echo htmlspecialchars($data['google_plus']); ?>">
+                                        <input type="url" class="form-control" name="google_plus" value="<?php echo htmlspecialchars($google_plus); ?>">
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">LinkedIn</label>
-                                        <input type="url" class="form-control" name="linkedin" value="<?php echo htmlspecialchars($data['linkedin']); ?>">
+                                        <input type="url" class="form-control" name="linkedin" value="<?php echo htmlspecialchars($linkedin); ?>">
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Instagram</label>
-                                        <input type="url" class="form-control" name="instagram" value="<?php echo htmlspecialchars($data['instagram']); ?>">
+                                        <input type="url" class="form-control" name="instagram" value="<?php echo htmlspecialchars($instagram); ?>">
                                     </div>
                                     <div class="text-right mt-3">
                                         <input type="submit" name="update_social_links" value="Save Changes">
                                     </div>
                                 </form>
                             </div>
-
-                        <div class="tab-pane fade" id="account-connections">
-                            <div class="card-body">
-                                <button type="button" class="btn btn-twitter">Connect to
-                                    <strong>Twitter</strong></button>
-                            </div>
-                            <hr class="border-light m-0">
-                            <div class="card-body">
-                                <h5 class="mb-2">
-                                    <a href="javascript:void(0)" class="float-right text-muted text-tiny"><i
-                                            class="ion ion-md-close"></i> Remove</a>
-                                    <i class="ion ion-logo-google text-google"></i>
-                                    You are connected to Google:
-                                </h5>
-                                <a href="/cdn-cgi/l/email-protection" class="__cf_email__"
-                                    data-cfemail="f9979498818e9c9595b994989095d79a9694">[email&#160;protected]</a>
-                            </div>
-                            <hr class="border-light m-0">
-                            <div class="card-body">
-                                <button type="button" class="btn btn-facebook">Connect to
-                                    <strong>Facebook</strong></button>
-                            </div>
-                            <hr class="border-light m-0">
-                            <div class="card-body">
-                                <button type="button" class="btn btn-instagram">Connect to
-                                    <strong>Instagram</strong></button>
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="account-notifications">
-                            <div class="card-body pb-2">
-                                <h6 class="mb-4">Activity</h6>
-                                <div class="form-group">
-                                    <label class="switcher">
-                                        <input type="checkbox" class="switcher-input" checked>
-                                        <span class="switcher-indicator">
-                                            <span class="switcher-yes"></span>
-                                            <span class="switcher-no"></span>
-                                        </span>
-                                        <span class="switcher-label">Email me when someone comments on my article</span>
-                                    </label>
-                                </div>
-                                <div class="form-group">
-                                    <label class="switcher">
-                                        <input type="checkbox" class="switcher-input" checked>
-                                        <span class="switcher-indicator">
-                                            <span class="switcher-yes"></span>
-                                            <span class="switcher-no"></span>
-                                        </span>
-                                        <span class="switcher-label">Email me when someone answers on my forum
-                                            thread</span>
-                                    </label>
-                                </div>
-                                <div class="form-group">
-                                    <label class="switcher">
-                                        <input type="checkbox" class="switcher-input">
-                                        <span class="switcher-indicator">
-                                            <span class="switcher-yes"></span>
-                                            <span class="switcher-no"></span>
-                                        </span>
-                                        <span class="switcher-label">Email me when someone follows me</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <hr class="border-light m-0">
-                            <div class="card-body pb-2">
-                                <h6 class="mb-4">Application</h6>
-                                <div class="form-group">
-                                    <label class="switcher">
-                                        <input type="checkbox" class="switcher-input" checked>
-                                        <span class="switcher-indicator">
-                                            <span class="switcher-yes"></span>
-                                            <span class="switcher-no"></span>
-                                        </span>
-                                        <span class="switcher-label">News and announcements</span>
-                                    </label>
-                                </div>
-                                <div class="form-group">
-                                    <label class="switcher">
-                                        <input type="checkbox" class="switcher-input">
-                                        <span class="switcher-indicator">
-                                            <span class="switcher-yes"></span>
-                                            <span class="switcher-no"></span>
-                                        </span>
-                                        <span class="switcher-label">Weekly product updates</span>
-                                    </label>
-                                </div>
-                                <div class="form-group">
-                                    <label class="switcher">
-                                        <input type="checkbox" class="switcher-input" checked>
-                                        <span class="switcher-indicator">
-                                            <span class="switcher-yes"></span>
-                                            <span class="switcher-no"></span>
-                                        </span>
-                                        <span class="switcher-label">Weekly blog digest</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
