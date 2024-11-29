@@ -22,16 +22,19 @@ if (isset($_POST['login'])) {
     if ($result->num_rows > 0) {
         $data = $result->fetch_assoc();
         $_SESSION["username"] = $data["username"];
+        $_SESSION["user_id"] = $data["id"];  // Menyimpan id di session
         $_SESSION["is_login"] = true;
-
+    
         header("location: dashboardlogin.php");
     } else {
         $login_message = "Akun tidak ditemukan";
     }
+    
     $stmt->close();
     $mysqli->close();
 }
 ?>
+
 
 <!doctype html>
 <html lang="en">
